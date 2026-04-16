@@ -9,7 +9,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
-function Quiz({ subject }) {
+function Quiz({ subject, demoMode = false }) {
     const [studyText, setStudyText] = useState('')
     const [topic, setTopic] = useState('')
     const [difficulty, setDifficulty] = useState('Medium')
@@ -176,8 +176,24 @@ function Quiz({ subject }) {
         setFeedback('')
         setTimeUp(false)
 
+        if (demoMode) {
+            setTimeout(() => {
+                const demoQuestion = `Question: What is the derivative of $x^2$?
+
+A) $x$
+B) $2x$
+C) $x^2$
+D) $2$`
+
+                setQuestion(demoQuestion)
+                startTimer()
+                setLoading(false)
+            }, 700)
+            return
+        }
+
         try {
-            const res = await fetch(`${API_BASE}/api/quiz`,  {
+            const res = await fetch(`${API_BASE}/api/quiz`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -210,11 +226,52 @@ function Quiz({ subject }) {
     }
 
     async function checkAnswer(choiceOverride = null) {
-        const finalAnswer = (choiceOverride || selectedChoice || answer).trim()
+        const finalAnswer = (choiceOverride || selectedChoice || answer).trim().toUpperCase()
 
         if (!question || !finalAnswer || checking || !isValidMCQ || timeUp) return
         setChecking(true)
         setFeedback('')
+
+        if (demoMode) {
+            setTimeout(() => {
+                const correct = finalAnswer === 'B'
+                const reply = correct
+                    ? `CORRECT
+
+Nice job. The derivative of $$x^2$$ is $$2x$$ by the power rule.`
+                    : `INCORRECT
+
+The correct answer is **B**.
+
+Using the power rule:
+
+$$\\frac{d}{dx}(x^2) = 2x$$`
+
+                if (correct) {
+                    setScore((prev) => prev + 1)
+                }
+
+                setTotal((prev) => prev + 1)
+                setFeedback(reply)
+                setTimeLeft(0)
+
+                setHistory((prev) => [
+                    {
+                        id: Date.now(),
+                        subject,
+                        topic,
+                        difficulty,
+                        userAnswer: finalAnswer,
+                        correct,
+                        question
+                    },
+                    ...prev
+                ])
+
+                setChecking(false)
+            }, 700)
+            return
+        }
 
         try {
             const res = await fetch(`${API_BASE}/api/check-answer`, {
@@ -284,6 +341,12 @@ function Quiz({ subject }) {
     return (
         <div>
             <h2>{subject} Quiz</h2>
+
+            {demoMode && (
+                <p className="muted-text" style={{ marginBottom: '12px' }}>
+                    Demo Mode Active — quiz uses sample responses only
+                </p>
+            )}
 
             <div className="quiz-top-row">
                 <p>Score: {score}/{total}</p>

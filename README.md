@@ -1,16 +1,15 @@
 # Scholar AI
 
-An AI-powered study assistant that helps students learn faster by turning notes and PDFs into interactive quizzes and explanations.
+An AI-powered study assistant that helps students learn faster by turning notes, PDFs, and images into interactive quizzes and explanations.
 
-Built with a secure backend to protect API keys and optimize cost, Scholar AI combines chat-based learning with adaptive quiz generation.
+Scholar AI combines chat-based learning, quiz generation, image-assisted assignment help, and performance tracking into a single platform designed for active recall and deeper understanding.
 
 ---
 
 ## 🌐 Live Demo
 https://scholar-ai-xi.vercel.app/
 
-## 🔗 Backend API
-https://scholar-ai-o86l.onrender.com
+⚠️ Note: The public version runs in demo mode to prevent API abuse and control costs. The full AI-powered version is available in local development with a valid API key.
 
 ---
 
@@ -23,10 +22,11 @@ https://scholar-ai-o86l.onrender.com
 - 📉 Weak topic detection
 - 💾 Saved study sets
 - 📄 PDF + TXT upload support
-- 🖼 Image upload for assignment help *(in progress)*
-- ➗ Math rendering (LaTeX with KaTeX)
-- 🔒 Secure backend (API key never exposed)
-- ⚡ Rate limiting to prevent abuse
+- 🖼️ Image upload for assignment help *(in progress)*
+- ➗ Math rendering using LaTeX (KaTeX)
+- 🔒 Secure backend with protected API keys
+- ⚡ Rate limiting and usage controls
+- 🎭 Demo mode for safe public deployment
 
 ---
 
@@ -40,80 +40,25 @@ https://scholar-ai-o86l.onrender.com
 ### Backend
 - Node.js + Express
 - Anthropic API (Claude)
-- dotenv + CORS
 - Multer (image uploads)
+- dotenv + CORS
 
 ---
 
 ## 🧠 How It Works
 
 1. User inputs notes, uploads a PDF, or submits an image
-2. Backend processes the request securely
-3. Claude generates:
+2. Backend securely processes the request
+3. AI generates:
    - explanations
    - quiz questions
    - answer feedback
-4. App tracks performance and highlights weak topics
+4. App tracks performance and highlights weak areas
 
 ---
 
 ## ⚙️ Setup
 
-### 1. Install dependencies
+### Install dependencies
 ```bash
 npm install
-```
-
-### 2. Create `.env` in root
-```env
-ANTHROPIC_API_KEY=your_api_key_here
-PORT=3001
-```
-
-### 3. Run backend
-```bash
-npm run server
-```
-
-### 4. Run frontend
-```bash
-npm run dev
-```
-
----
-
-## 🚀 Deployment
-
-- Frontend: Vercel
-- Backend: Render
-
----
-
-## 🔐 Security
-
-- API key stored server-side only
-- `.env` ignored via `.gitignore`
-- No direct browser access to AI API
-
----
-
-## 💡 Future Improvements
-
-- User authentication
-- Paid subscription tiers
-- Cloud database (user progress)
-- AI-powered study plans
-- Improved image recognition accuracy
-- Full mobile optimization
-
----
-
-## 📈 Why This Project Matters
-
-Most AI study tools are passive. Scholar AI focuses on **active recall** and **personalized testing**, which are proven to improve learning outcomes.
-
----
-
-## 👨‍💻 Author
-
-**Nabeel Farooqi**
