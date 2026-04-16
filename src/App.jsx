@@ -9,6 +9,176 @@ import Quiz from './Quiz'
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 const DEMO_MODE = true
 
+function getDemoChatResponse(input, subject) {
+    const text = input.toLowerCase().trim()
+
+    if (!text) {
+        return `## Demo mode
+
+Please enter a question to see a simulated response.`
+    }
+
+    if (text === 'hi' || text === 'hello' || text === 'hey') {
+        return `## Demo mode
+
+Hey — this public version is running in **demo mode**, so no live AI request was used.
+
+You can try asking things like:
+- "What is a derivative?"
+- "Explain Newton's second law"
+- "What is an atom?"
+- "Give me a study tip"
+
+In the full version, Scholar AI would respond dynamically using AI.`
+    }
+
+    if (subject === 'Calculus' || text.includes('derivative') || text.includes('integral') || text.includes('limit')) {
+        return `## Demo response — Calculus
+
+A **derivative** measures how fast a function changes.
+
+For example, if:
+
+$$f(x) = x^2$$
+
+then:
+
+$$f'(x) = 2x$$
+
+That means the slope of the function at any point $x$ is $2x$.
+
+### Key idea
+- Function = original expression
+- Derivative = rate of change / slope
+
+This is a simulated response in demo mode.`
+    }
+
+    if (subject === 'Physics' || text.includes('force') || text.includes('motion') || text.includes('acceleration')) {
+        return `## Demo response — Physics
+
+Newton's Second Law says:
+
+$$F = ma$$
+
+Where:
+- $F$ = force
+- $m$ = mass
+- $a$ = acceleration
+
+### Example
+If an object has mass $2\\,kg$ and acceleration $3\\,m/s^2$:
+
+$$F = 2 \\cdot 3 = 6\\,N$$
+
+This is a simulated response in demo mode.`
+    }
+
+    if (subject === 'Chemistry' || text.includes('atom') || text.includes('mole') || text.includes('reaction')) {
+        return `## Demo response — Chemistry
+
+Atoms are made of:
+- **Protons** (positive)
+- **Neutrons** (neutral)
+- **Electrons** (negative)
+
+### Important fact
+The **atomic number** equals the number of protons.
+
+### Example
+Carbon has atomic number **6**, so it has **6 protons**.
+
+This is a simulated response in demo mode.`
+    }
+
+    if (subject === 'Biology' || text.includes('cell') || text.includes('dna') || text.includes('photosynthesis')) {
+        return `## Demo response — Biology
+
+Cells are the basic unit of life.
+
+### Two major cell types
+- **Prokaryotic**: no nucleus
+- **Eukaryotic**: has a nucleus
+
+### Example
+Plant and animal cells are eukaryotic.
+
+This is a simulated response in demo mode.`
+    }
+
+    if (subject === 'History' || text.includes('war') || text.includes('revolution') || text.includes('independence')) {
+        return `## Demo response — History
+
+The **American Revolution** began in **1775** and the **Declaration of Independence** was signed in **1776**.
+
+### Main cause
+Many colonists opposed **taxation without representation**.
+
+This is a simulated response in demo mode.`
+    }
+
+    return `## Demo mode
+
+This public version is running in **demo mode**, so your message was not sent to the live backend.
+
+### What Scholar AI would normally do
+- analyze your question
+- generate a subject-specific explanation
+- format math clearly
+- help you study step by step
+
+### Your input
+> ${input}
+
+Try asking a more specific question for a more realistic demo response.`
+}
+
+function getDemoImageResponse(subject, fileName) {
+    if (subject === 'Calculus') {
+        return `## Demo image analysis — Calculus
+
+Image received: **${fileName}**
+
+This looks like a math assignment.
+
+A full AI version would:
+1. read the expression from the image
+2. identify the question type
+3. solve it step by step
+4. return formatted math like:
+
+$$f(x) = x^2$$
+$$f'(x) = 2x$$
+
+This is a simulated image response in demo mode.`
+    }
+
+    if (subject === 'Chemistry') {
+        return `## Demo image analysis — Chemistry
+
+Image received: **${fileName}**
+
+This looks like a chemistry worksheet.
+
+A full AI version would extract formulas, identify reaction types, and explain the answer step by step.
+
+This is a simulated image response in demo mode.`
+    }
+
+    return `## Demo image analysis
+
+Image received: **${fileName}**
+
+This public version is running in demo mode, so the image was not sent to the backend.
+
+The full version would:
+- inspect the uploaded assignment image
+- identify the question
+- solve or explain it clearly
+
+This is a simulated response.`
+}
+
 function App() {
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -35,33 +205,19 @@ function App() {
         if (!input.trim() || loading) return
         setLoading(true)
 
-        const newMessages = [...messages, { role: 'user', content: input }]
+        const currentInput = input
+        const newMessages = [...messages, { role: 'user', content: currentInput }]
         setMessages(newMessages)
         setInput('')
 
         if (DEMO_MODE) {
             setTimeout(() => {
+                const demoResponse = getDemoChatResponse(currentInput, subject)
                 setMessages([
                     ...newMessages,
                     {
                         role: 'assistant',
-                        content: `## Demo mode
-
-This public version is running in **demo mode**, so no live AI request was used.
-
-Example explanation:
-
-A derivative tells you how fast a function is changing.
-
-If:
-
-$$f(x) = x^2$$
-
-then:
-
-$$f'(x) = 2x$$
-
-Turn off demo mode in the private version to use real AI responses.`
+                        content: demoResponse
                     }
                 ])
                 setLoading(false)
@@ -99,9 +255,10 @@ Turn off demo mode in the private version to use real AI responses.`
         if (!imageFile || loading) return
         setLoading(true)
 
+        const currentFile = imageFile
         const fileMessage = {
             role: 'user',
-            content: `Uploaded image: ${imageFile.name}`
+            content: `Uploaded image: ${currentFile.name}`
         }
 
         const newMessages = [...messages, fileMessage]
@@ -109,23 +266,12 @@ Turn off demo mode in the private version to use real AI responses.`
 
         if (DEMO_MODE) {
             setTimeout(() => {
+                const demoResponse = getDemoImageResponse(subject, currentFile.name)
                 setMessages([
                     ...newMessages,
                     {
                         role: 'assistant',
-                        content: `## Demo image analysis
-
-This public version is in **demo mode**, so the image was not sent to the backend.
-
-Example response:
-
-This looks like an assignment problem. A real version of Scholar AI would:
-1. Read the image
-2. Identify the question
-3. Solve it step by step
-4. Return a clean answer with formatting
-
-Turn off demo mode in the private version to use real image analysis.`
+                        content: demoResponse
                     }
                 ])
                 setImageFile(null)
@@ -136,7 +282,7 @@ Turn off demo mode in the private version to use real image analysis.`
 
         try {
             const formData = new FormData()
-            formData.append('image', imageFile)
+            formData.append('image', currentFile)
             formData.append('subject', subject)
             formData.append('prompt', 'Solve or explain the assignment shown in this image.')
 
@@ -173,7 +319,6 @@ Turn off demo mode in the private version to use real image analysis.`
     return (
         <div>
             <h1>Study Assistant</h1>
-
 
             {DEMO_MODE && (
                 <p className="muted-text" style={{ textAlign: 'center', marginBottom: '16px' }}>
