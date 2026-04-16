@@ -9,7 +9,6 @@ const app = express()
 const PORT = process.env.PORT || 3001
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://scholar-ai-xi.vercel.app'
 
-// CORS: only allow your frontend
 app.use(cors({
     origin: [FRONTEND_URL]
 }))
@@ -20,15 +19,13 @@ const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
 })
 
-// Model choices
 const CHAT_MODEL = 'claude-sonnet-4-6'
 const QUIZ_MODEL = 'claude-haiku-4-5-20251001'
 
-// Limits
 const usageByIp = new Map()
 const FREE_DAILY_LIMIT = 40
 let totalRequests = 0
-const MAX_TOTAL_REQUESTS = 1000
+const MAX_TOTAL_REQUESTS = 300
 
 function getClientIp(req) {
     return (
@@ -52,7 +49,7 @@ function resetUsageIfNeeded(record) {
 function usageLimitMiddleware(req, res, next) {
     if (totalRequests >= MAX_TOTAL_REQUESTS) {
         return res.status(503).json({
-            error: 'Service temporarily unavailable. Please try again later.'
+            error: 'Server is at capacity. Please try again later.'
         })
     }
 
@@ -69,22 +66,25 @@ function usageLimitMiddleware(req, res, next) {
     usageByIp.set(ip, record)
     totalRequests += 1
 
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} | IP: ${ip} | Daily Count: ${record.count} | Total Requests: ${totalRequests}`)
+    console.log(
+        `[${new Date().toISOString()}] ${req.method} ${req.path} | IP: ${ip} | Daily Count: ${record.count} | Total Requests: ${totalRequests} / ${MAX_TOTAL_REQUESTS}`
+    )
+
+    if (record.count === FREE_DAILY_LIMIT) {
+        console.log(`User hit free limit: ${ip}`)
+    }
 
     next()
 }
 
-// Root route
 app.get('/', (req, res) => {
     res.send('Scholar AI backend is running.')
 })
 
-// Health check
 app.get('/api/health', (req, res) => {
     res.json({ ok: true })
 })
 
-// Chat endpoint
 app.post('/api/chat', usageLimitMiddleware, async (req, res) => {
     try {
         const { messages, subject } = req.body
@@ -95,8 +95,10 @@ app.post('/api/chat', usageLimitMiddleware, async (req, res) => {
 
         const response = await anthropic.messages.create({
             model: CHAT_MODEL,
-            max_tokens: 700,
+            max_tokens: 1200,
             system: `You are a study assistant specializing in ${subject}.
+
+Keep answers concise. If solving step-by-step, limit to 3-5 steps unless the user explicitly asks for more detail.
 
 Rules:
 - Always explain clearly and step-by-step
@@ -130,7 +132,6 @@ When solving problems:
     }
 })
 
-// Quiz generation endpoint
 app.post('/api/quiz', usageLimitMiddleware, async (req, res) => {
     try {
         const { subject, topic, difficulty, studyText } = req.body
@@ -176,7 +177,6 @@ Do not include the answer.`,
     }
 })
 
-// Answer checking endpoint
 app.post('/api/check-answer', usageLimitMiddleware, async (req, res) => {
     try {
         const { subject, topic, studyText, question, answer } = req.body
