@@ -17,6 +17,7 @@ function App() {
     })
     const [subject, setSubject] = useState('Calculus')
     const [tab, setTab] = useState('chat')
+    const [imageFile, setImageFile] = useState(null)
     const bottomRef = useRef(null)
 
     useEffect(() => {
@@ -57,6 +58,44 @@ function App() {
             setMessages([
                 ...newMessages,
                 { role: 'assistant', content: 'Something went wrong.' }
+            ])
+        }
+
+        setLoading(false)
+    }
+
+    async function handleImageAsk() {
+        if (!imageFile || loading) return
+        setLoading(true)
+
+        const formData = new FormData()
+        formData.append('image', imageFile)
+        formData.append('subject', subject)
+        formData.append('prompt', 'Solve or explain the assignment shown in this image.')
+
+        const fileMessage = {
+            role: 'user',
+            content: `Uploaded image: ${imageFile.name}`
+        }
+
+        const newMessages = [...messages, fileMessage]
+        setMessages(newMessages)
+
+        try {
+            const res = await fetch(`${API_BASE}/api/image-chat`, {
+                method: 'POST',
+                body: formData
+            })
+
+            const data = await res.json()
+            const reply = data.text || data.error || 'No response.'
+
+            setMessages([...newMessages, { role: 'assistant', content: reply }])
+            setImageFile(null)
+        } catch (error) {
+            setMessages([
+                ...newMessages,
+                { role: 'assistant', content: 'Something went wrong while analyzing the image.' }
             ])
         }
 
@@ -113,6 +152,17 @@ function App() {
                         )}
 
                         <div ref={bottomRef} />
+                    </div>
+
+                    <div className="input-bar">
+                        <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/gif"
+                            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                        />
+                        <button onClick={handleImageAsk} disabled={loading || !imageFile}>
+                            {loading ? 'Analyzing...' : 'Ask from Image'}
+                        </button>
                     </div>
 
                     <div className="input-bar">

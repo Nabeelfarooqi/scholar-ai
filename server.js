@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import Anthropic from '@anthropic-ai/sdk'
+import multer from 'multer'
 
 dotenv.config()
 
@@ -14,6 +15,13 @@ app.use(cors({
 }))
 
 app.use(express.json({ limit: '10mb' }))
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 8 * 1024 * 1024
+    }
+})
 
 const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
@@ -107,19 +115,7 @@ Rules:
 - Use $$...$$ for equations
 - Never output raw math symbols without formatting
 - Use markdown headings and bullet points when helpful
-- Keep explanations clean and readable
-
-Examples:
-Instead of: f'(x) = 2x
-Write: $$f'(x) = 2x$$
-
-Instead of: 1/2
-Write: $$\\frac{1}{2}$$
-
-When solving problems:
-- Show steps clearly
-- Put important equations on separate lines
-- Keep the final answer easy to spot`,
+- Keep explanations clean and readable`,
             messages
         })
 
@@ -129,6 +125,70 @@ When solving problems:
     } catch (error) {
         console.error('Chat error:', error)
         res.status(500).json({ error: 'Failed to get chat response.' })
+    }
+})
+
+app.post('/api/image-chat', usageLimitMiddleware, upload.single('image'), async (req, res) => {
+    try {
+        const {
+            subject = 'General',
+            prompt = 'Solve or explain the assignment shown in this image.'
+        } = req.body
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'Image file is required.' })
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if (!allowedTypes.includes(req.file.mimetype)) {
+            return res.status(400).json({
+                error: 'Only JPG, PNG, GIF, and WEBP images are supported.'
+            })
+        }
+
+        const imageBase64 = req.file.buffer.toString('base64')
+
+        const response = await anthropic.messages.create({
+            model: CHAT_MODEL,
+            max_tokens: 1200,
+            system: `You are a study assistant specializing in ${subject}.
+
+The user may upload a picture of homework, a worksheet, or an assignment.
+
+Rules:
+- Read the image carefully
+- If the image contains a question, solve it clearly
+- If the image is blurry or incomplete, say exactly what is missing
+- If math appears, format it using LaTeX
+- Keep answers clear and readable
+- If multiple questions appear, summarize them first, then solve them one at a time`,
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'image',
+                            source: {
+                                type: 'base64',
+                                media_type: req.file.mimetype,
+                                data: imageBase64
+                            }
+                        },
+                        {
+                            type: 'text',
+                            text: prompt
+                        }
+                    ]
+                }
+            ]
+        })
+
+        res.json({
+            text: response.content?.[0]?.text || 'No response.'
+        })
+    } catch (error) {
+        console.error('Image chat error:', error)
+        res.status(500).json({ error: 'Failed to analyze image.' })
     }
 })
 

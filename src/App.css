@@ -327,4 +327,9 @@ code {
   .choice-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  input[type="file"] {
+    width: 100%;
+    max-width: 100%;
+  }
 }
