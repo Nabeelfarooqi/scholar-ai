@@ -23,6 +23,7 @@ https://scholar-ai-o86l.onrender.com
 - 📉 Weak topic detection
 - 💾 Saved study sets
 - 📄 PDF + TXT upload support
+- 🖼 Image upload for assignment help *(in progress)*
 - ➗ Math rendering (LaTeX with KaTeX)
 - 🔒 Secure backend (API key never exposed)
 - ⚡ Rate limiting to prevent abuse
@@ -40,13 +41,14 @@ https://scholar-ai-o86l.onrender.com
 - Node.js + Express
 - Anthropic API (Claude)
 - dotenv + CORS
+- Multer (image uploads)
 
 ---
 
 ## 🧠 How It Works
 
-1. User inputs notes or uploads a PDF
-2. Backend processes request securely
+1. User inputs notes, uploads a PDF, or submits an image
+2. Backend processes the request securely
 3. Claude generates:
    - explanations
    - quiz questions
@@ -101,7 +103,8 @@ npm run dev
 - Paid subscription tiers
 - Cloud database (user progress)
 - AI-powered study plans
-- Mobile version
+- Improved image recognition accuracy
+- Full mobile optimization
 
 ---
 
