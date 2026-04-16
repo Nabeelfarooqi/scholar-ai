@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import ReactMarkdown from "react-markdown"
 import remarkMath from "remark-math"
@@ -36,24 +36,20 @@ function App() {
         setInput('')
 
         try {
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
+            const res = await fetch('http://localhost:3001/api/chat', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-                    'anthropic-version': '2023-06-01',
-                    'anthropic-dangerous-direct-browser-access': 'true'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'claude-opus-4-6',
-                    max_tokens: 1024,
-                    system: `You are a study assistant specializing in ${subject}. When given a concept, explain it clearly and simply. When given a question, answer it step by step. Use clean formatting and LaTeX for math when needed.`,
-                    messages: newMessages
+                    messages: newMessages,
+                    subject
                 })
             })
 
             const data = await res.json()
-            const reply = data.content?.[0]?.text || 'No response.'
+            const reply = data.text || 'No response.'
+
             setMessages([...newMessages, { role: 'assistant', content: reply }])
         } catch (error) {
             setMessages([

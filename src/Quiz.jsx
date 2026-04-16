@@ -175,37 +175,21 @@ function Quiz({ subject }) {
         setTimeUp(false)
 
         try {
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
+            const res = await fetch('http://localhost:3001/api/quiz', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-                    'anthropic-version': '2023-06-01',
-                    'anthropic-dangerous-direct-browser-access': 'true'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'claude-opus-4-6',
-                    max_tokens: 700,
-                    system: `You are a ${subject} teacher. Only use the study material the user provides. Difficulty should be ${difficulty}. If the material is not sufficient, clearly say that no valid quiz can be generated. Otherwise, generate EXACTLY one multiple choice question in this format only:
-
-Question: ...
-A) ...
-B) ...
-C) ...
-D) ...
-
-Do not include the answer.`,
-                    messages: [
-                        {
-                            role: 'user',
-                            content: `Study material:\n${studyText}\n\nTopic: ${topic}\n\nCreate one ${difficulty.toLowerCase()} multiple choice question based only on this material.`
-                        }
-                    ]
+                    subject,
+                    topic,
+                    difficulty,
+                    studyText
                 })
             })
 
             const data = await res.json()
-            const reply = data.content?.[0]?.text || 'No quiz generated.'
+            const reply = data.text || 'No quiz generated.'
             setQuestion(reply)
 
             if (
@@ -231,29 +215,22 @@ Do not include the answer.`,
         setFeedback('')
 
         try {
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
+            const res = await fetch('http://localhost:3001/api/check-answer', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-                    'anthropic-version': '2023-06-01',
-                    'anthropic-dangerous-direct-browser-access': 'true'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'claude-opus-4-6',
-                    max_tokens: 700,
-                    system: `You are a ${subject} teacher. Only use the study material and quiz question provided. First line must be exactly CORRECT or INCORRECT. Then explain the correct answer briefly and clearly.`,
-                    messages: [
-                        {
-                            role: 'user',
-                            content: `Study material:\n${studyText}\n\nTopic: ${topic}\n\nQuestion:\n${question}\n\nMy answer: ${finalAnswer}`
-                        }
-                    ]
+                    subject,
+                    topic,
+                    studyText,
+                    question,
+                    answer: finalAnswer
                 })
             })
 
             const data = await res.json()
-            const reply = data.content?.[0]?.text || 'No feedback generated.'
+            const reply = data.text || 'No feedback generated.'
             const correct = reply.startsWith('CORRECT')
 
             if (correct) {
