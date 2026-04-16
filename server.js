@@ -7,10 +7,13 @@ dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3001
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://scholar-ai-xi.vercel.app'
 
+// CORS: only allow your frontend
 app.use(cors({
-    origin: '*'
+    origin: FRONTEND_URL
 }))
+
 app.use(express.json({ limit: '10mb' }))
 
 const anthropic = new Anthropic({
@@ -21,9 +24,11 @@ const anthropic = new Anthropic({
 const CHAT_MODEL = 'claude-sonnet-4-6'
 const QUIZ_MODEL = 'claude-haiku-4-5-20251001'
 
-// Simple free-tier limiter by IP
+// Limits
 const usageByIp = new Map()
 const FREE_DAILY_LIMIT = 40
+let totalRequests = 0
+const MAX_TOTAL_REQUESTS = 5000
 
 function getClientIp(req) {
     return (
@@ -45,6 +50,12 @@ function resetUsageIfNeeded(record) {
 }
 
 function usageLimitMiddleware(req, res, next) {
+    if (totalRequests >= MAX_TOTAL_REQUESTS) {
+        return res.status(503).json({
+            error: 'Service temporarily unavailable. Please try again later.'
+        })
+    }
+
     const ip = getClientIp(req)
     const record = resetUsageIfNeeded(usageByIp.get(ip))
 
@@ -56,8 +67,17 @@ function usageLimitMiddleware(req, res, next) {
 
     record.count += 1
     usageByIp.set(ip, record)
+    totalRequests += 1
+
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} | IP: ${ip} | Daily Count: ${record.count} | Total Requests: ${totalRequests}`)
+
     next()
 }
+
+// Root route
+app.get('/', (req, res) => {
+    res.send('Scholar AI backend is running.')
+})
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -97,8 +117,7 @@ Write: $$\\frac{1}{2}$$
 When solving problems:
 - Show steps clearly
 - Put important equations on separate lines
-- Keep the final answer easy to spot
-`,
+- Keep the final answer easy to spot`,
             messages
         })
 
