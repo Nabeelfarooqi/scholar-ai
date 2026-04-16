@@ -7,6 +7,7 @@ import "katex/dist/katex.min.css"
 import Quiz from './Quiz'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const DEMO_MODE = true
 
 function App() {
     const [input, setInput] = useState('')
@@ -38,6 +39,36 @@ function App() {
         setMessages(newMessages)
         setInput('')
 
+        if (DEMO_MODE) {
+            setTimeout(() => {
+                setMessages([
+                    ...newMessages,
+                    {
+                        role: 'assistant',
+                        content: `## Demo mode
+
+This public version is running in **demo mode**, so no live AI request was used.
+
+Example explanation:
+
+A derivative tells you how fast a function is changing.
+
+If:
+
+$$f(x) = x^2$$
+
+then:
+
+$$f'(x) = 2x$$
+
+Turn off demo mode in the private version to use real AI responses.`
+                    }
+                ])
+                setLoading(false)
+            }, 700)
+            return
+        }
+
         try {
             const res = await fetch(`${API_BASE}/api/chat`, {
                 method: 'POST',
@@ -68,11 +99,6 @@ function App() {
         if (!imageFile || loading) return
         setLoading(true)
 
-        const formData = new FormData()
-        formData.append('image', imageFile)
-        formData.append('subject', subject)
-        formData.append('prompt', 'Solve or explain the assignment shown in this image.')
-
         const fileMessage = {
             role: 'user',
             content: `Uploaded image: ${imageFile.name}`
@@ -81,21 +107,63 @@ function App() {
         const newMessages = [...messages, fileMessage]
         setMessages(newMessages)
 
+        if (DEMO_MODE) {
+            setTimeout(() => {
+                setMessages([
+                    ...newMessages,
+                    {
+                        role: 'assistant',
+                        content: `## Demo image analysis
+
+This public version is in **demo mode**, so the image was not sent to the backend.
+
+Example response:
+
+This looks like an assignment problem. A real version of Scholar AI would:
+1. Read the image
+2. Identify the question
+3. Solve it step by step
+4. Return a clean answer with formatting
+
+Turn off demo mode in the private version to use real image analysis.`
+                    }
+                ])
+                setImageFile(null)
+                setLoading(false)
+            }, 900)
+            return
+        }
+
         try {
+            const formData = new FormData()
+            formData.append('image', imageFile)
+            formData.append('subject', subject)
+            formData.append('prompt', 'Solve or explain the assignment shown in this image.')
+
             const res = await fetch(`${API_BASE}/api/image-chat`, {
                 method: 'POST',
                 body: formData
             })
 
             const data = await res.json()
-            const reply = data.text || data.error || 'No response.'
+
+            if (!res.ok) {
+                setMessages([
+                    ...newMessages,
+                    { role: 'assistant', content: data.error || 'Image upload failed.' }
+                ])
+                setLoading(false)
+                return
+            }
+
+            const reply = data.text || 'No response.'
 
             setMessages([...newMessages, { role: 'assistant', content: reply }])
             setImageFile(null)
         } catch (error) {
             setMessages([
                 ...newMessages,
-                { role: 'assistant', content: 'Something went wrong while analyzing the image.' }
+                { role: 'assistant', content: `Request failed: ${error.message}` }
             ])
         }
 
@@ -105,6 +173,13 @@ function App() {
     return (
         <div>
             <h1>Study Assistant</h1>
+
+
+            {DEMO_MODE && (
+                <p className="muted-text" style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    Demo Mode Active — live AI requests are disabled in this public version
+                </p>
+            )}
 
             <div className="tab-bar">
                 <button onClick={() => setTab('chat')}>Chat</button>
@@ -161,7 +236,7 @@ function App() {
                             onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                         />
                         <button onClick={handleImageAsk} disabled={loading || !imageFile}>
-                            {loading ? 'Analyzing...' : 'Ask from Image'}
+                            {loading ? 'Analyzing...' : imageFile ? 'Ask from Image' : 'Select an Image First'}
                         </button>
                     </div>
 
@@ -182,7 +257,7 @@ function App() {
 
             {tab === 'quiz' && (
                 <div className="quiz-box">
-                    <Quiz subject={subject} />
+                    <Quiz subject={subject} demoMode={DEMO_MODE} />
                 </div>
             )}
         </div>
