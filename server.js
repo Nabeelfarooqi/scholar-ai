@@ -17,11 +17,11 @@ const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
 })
 
-// Cheaper/default model choices
+// Model choices
 const CHAT_MODEL = 'claude-sonnet-4-6'
 const QUIZ_MODEL = 'claude-haiku-4-5-20251001'
 
-// Very simple free-tier limiter by IP
+// Simple free-tier limiter by IP
 const usageByIp = new Map()
 const FREE_DAILY_LIMIT = 40
 
@@ -59,7 +59,7 @@ function usageLimitMiddleware(req, res, next) {
     next()
 }
 
-// Optional: health check
+// Health check
 app.get('/api/health', (req, res) => {
     res.json({ ok: true })
 })
@@ -76,7 +76,29 @@ app.post('/api/chat', usageLimitMiddleware, async (req, res) => {
         const response = await anthropic.messages.create({
             model: CHAT_MODEL,
             max_tokens: 700,
-            system: `You are a study assistant specializing in ${subject}. When given a concept, explain it clearly and simply. When given a question, answer it step by step. Use clean formatting and LaTeX for math when needed. Be concise unless the user asks for more detail.`,
+            system: `You are a study assistant specializing in ${subject}.
+
+Rules:
+- Always explain clearly and step-by-step
+- ALWAYS format math using LaTeX
+- Use $...$ for inline math
+- Use $$...$$ for equations
+- Never output raw math symbols without formatting
+- Use markdown headings and bullet points when helpful
+- Keep explanations clean and readable
+
+Examples:
+Instead of: f'(x) = 2x
+Write: $$f'(x) = 2x$$
+
+Instead of: 1/2
+Write: $$\\frac{1}{2}$$
+
+When solving problems:
+- Show steps clearly
+- Put important equations on separate lines
+- Keep the final answer easy to spot
+`,
             messages
         })
 
@@ -98,7 +120,6 @@ app.post('/api/quiz', usageLimitMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Study text and topic are required.' })
         }
 
-        // Prevent very large note dumps from getting expensive
         if (studyText.length > 20000) {
             return res.status(400).json({
                 error: 'Study material is too large. Please shorten it or split it into smaller sections.'
@@ -108,7 +129,9 @@ app.post('/api/quiz', usageLimitMiddleware, async (req, res) => {
         const response = await anthropic.messages.create({
             model: QUIZ_MODEL,
             max_tokens: 400,
-            system: `You are a ${subject} teacher. Only use the study material the user provides. Difficulty should be ${difficulty}. If the material is not sufficient, clearly say that no valid quiz can be generated. Otherwise, generate EXACTLY one multiple choice question in this format only:
+            system: `You are a ${subject} teacher. Only use the study material the user provides. Difficulty should be ${difficulty}. If the material is not sufficient, clearly say that no valid quiz can be generated.
+
+Otherwise, generate EXACTLY one multiple choice question in this format only:
 
 Question: ...
 A) ...
@@ -152,7 +175,12 @@ app.post('/api/check-answer', usageLimitMiddleware, async (req, res) => {
         const response = await anthropic.messages.create({
             model: QUIZ_MODEL,
             max_tokens: 350,
-            system: `You are a ${subject} teacher. Only use the study material and quiz question provided. First line must be exactly CORRECT or INCORRECT. Then explain the correct answer briefly and clearly.`,
+            system: `You are a ${subject} teacher. Only use the study material and quiz question provided.
+
+Rules:
+- First line must be exactly CORRECT or INCORRECT
+- Then explain the correct answer briefly and clearly
+- If math is used, format it with LaTeX using $...$ or $$...$$`,
             messages: [
                 {
                     role: 'user',
