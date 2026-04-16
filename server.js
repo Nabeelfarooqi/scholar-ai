@@ -11,7 +11,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'https://scholar-ai-xi.vercel.a
 
 // CORS: only allow your frontend
 app.use(cors({
-    origin: FRONTEND_URL
+    origin: [FRONTEND_URL]
 }))
 
 app.use(express.json({ limit: '10mb' }))
@@ -28,7 +28,7 @@ const QUIZ_MODEL = 'claude-haiku-4-5-20251001'
 const usageByIp = new Map()
 const FREE_DAILY_LIMIT = 40
 let totalRequests = 0
-const MAX_TOTAL_REQUESTS = 5000
+const MAX_TOTAL_REQUESTS = 1000
 
 function getClientIp(req) {
     return (
