@@ -6,6 +6,14 @@ Built with a secure backend to protect API keys and optimize cost, Scholar AI co
 
 ---
 
+## 🌐 Live Demo
+https://scholar-ai-xi.vercel.app/
+
+## 🔗 Backend API
+https://scholar-ai-o86l.onrender.com
+
+---
+
 ## 🚀 Features
 
 - 💬 AI Chat Assistant (by subject)
@@ -37,13 +45,13 @@ Built with a secure backend to protect API keys and optimize cost, Scholar AI co
 
 ## 🧠 How It Works
 
-1. User inputs notes or uploads a PDF  
-2. Backend processes request securely  
+1. User inputs notes or uploads a PDF
+2. Backend processes request securely
 3. Claude generates:
-   - explanations  
-   - quiz questions  
-   - answer feedback  
-4. App tracks performance and highlights weak topics  
+   - explanations
+   - quiz questions
+   - answer feedback
+4. App tracks performance and highlights weak topics
 
 ---
 
@@ -72,21 +80,28 @@ npm run dev
 
 ---
 
+## 🚀 Deployment
+
+- Frontend: Vercel
+- Backend: Render
+
+---
+
 ## 🔐 Security
 
-- API key stored server-side only  
-- `.env` ignored via `.gitignore`  
-- No direct browser access to AI API  
+- API key stored server-side only
+- `.env` ignored via `.gitignore`
+- No direct browser access to AI API
 
 ---
 
 ## 💡 Future Improvements
 
-- User authentication  
-- Paid subscription tiers  
-- Cloud database (user progress)  
-- AI-powered study plans  
-- Mobile version  
+- User authentication
+- Paid subscription tiers
+- Cloud database (user progress)
+- AI-powered study plans
+- Mobile version
 
 ---
 
