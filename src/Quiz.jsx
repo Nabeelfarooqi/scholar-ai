@@ -175,7 +175,7 @@ function Quiz({ subject }) {
         setTimeUp(false)
 
         try {
-            const res = await fetch('http://localhost:3001/api/quiz', {
+            const res = await fetch('https://scholar-ai-o86l.onrender.com/api/quiz', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -215,7 +215,7 @@ function Quiz({ subject }) {
         setFeedback('')
 
         try {
-            const res = await fetch('http://localhost:3001/api/check-answer', {
+            const res = await fetch('https://scholar-ai-o86l.onrender.com/api/check-answer', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
