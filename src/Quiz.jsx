@@ -5,6 +5,8 @@ import rehypeKatex from "rehype-katex"
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
 function Quiz({ subject }) {
@@ -175,7 +177,7 @@ function Quiz({ subject }) {
         setTimeUp(false)
 
         try {
-            const res = await fetch('https://scholar-ai-o86l.onrender.com/api/quiz', {
+            const res = await fetch(`${API_BASE}/api/quiz`,  {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -215,7 +217,7 @@ function Quiz({ subject }) {
         setFeedback('')
 
         try {
-            const res = await fetch('https://scholar-ai-o86l.onrender.com/api/check-answer', {
+            const res = await fetch(`${API_BASE}/api/check-answer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
