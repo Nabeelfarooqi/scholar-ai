@@ -6,6 +6,8 @@ import rehypeKatex from "rehype-katex"
 import "katex/dist/katex.min.css"
 import Quiz from './Quiz'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 function App() {
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -36,7 +38,7 @@ function App() {
         setInput('')
 
         try {
-            const res = await fetch('https://scholar-ai-o86l.onrender.com/api/chat', {
+            const res = await fetch(`${API_BASE}/api/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -48,7 +50,7 @@ function App() {
             })
 
             const data = await res.json()
-            const reply = data.text || 'No response.'
+            const reply = data.text || data.error || 'No response.'
 
             setMessages([...newMessages, { role: 'assistant', content: reply }])
         } catch (error) {
