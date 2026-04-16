@@ -9,6 +9,155 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
+function getDemoQuizQuestion(subject, topic) {
+    const text = topic.toLowerCase()
+
+    if (subject === 'Calculus' || text.includes('derivative') || text.includes('limit')) {
+        return `Question: What is the derivative of $x^2$?
+
+A) $x$
+B) $2x$
+C) $x^2$
+D) $2$`
+    }
+
+    if (subject === 'Physics' || text.includes('force') || text.includes('motion')) {
+        return `Question: According to Newton's Second Law, what is the formula for force?
+
+A) $F = mv$
+B) $F = ma$
+C) $F = mg$
+D) $F = m/a$`
+    }
+
+    if (subject === 'Chemistry' || text.includes('atom') || text.includes('mole')) {
+        return `Question: Which particle has a negative charge?
+
+A) Proton
+B) Neutron
+C) Electron
+D) Nucleus`
+    }
+
+    if (subject === 'Biology' || text.includes('cell') || text.includes('dna')) {
+        return `Question: Which organelle is responsible for producing ATP?
+
+A) Nucleus
+B) Mitochondria
+C) Ribosome
+D) Golgi apparatus`
+    }
+
+    if (subject === 'History' || text.includes('revolution') || text.includes('war')) {
+        return `Question: In what year was the Declaration of Independence signed?
+
+A) 1775
+B) 1776
+C) 1781
+D) 1789`
+    }
+
+    return `Question: Which study method best matches active recall?
+
+A) Re-reading notes only
+B) Testing yourself from memory
+C) Highlighting everything
+D) Skimming textbook pages`
+}
+
+function getDemoCorrectAnswer(question) {
+    if (question.includes('derivative of $x^2$')) return 'B'
+    if (question.includes("Newton's Second Law")) return 'B'
+    if (question.includes('negative charge')) return 'C'
+    if (question.includes('producing ATP')) return 'B'
+    if (question.includes('Declaration of Independence')) return 'B'
+    if (question.includes('active recall')) return 'B'
+    return 'B'
+}
+
+function getDemoFeedback(question, finalAnswer) {
+    const correctAnswer = getDemoCorrectAnswer(question)
+    const correct = finalAnswer === correctAnswer
+
+    if (question.includes('derivative of $x^2$')) {
+        return correct
+            ? `CORRECT
+
+Nice job. Using the power rule:
+
+$$\\frac{d}{dx}(x^2) = 2x$$`
+            : `INCORRECT
+
+The correct answer is **B**.
+
+Using the power rule:
+
+$$\\frac{d}{dx}(x^2) = 2x$$`
+    }
+
+    if (question.includes("Newton's Second Law")) {
+        return correct
+            ? `CORRECT
+
+Nice job. Newton's Second Law is:
+
+$$F = ma$$`
+            : `INCORRECT
+
+The correct answer is **B**.
+
+Newton's Second Law states:
+
+$$F = ma$$`
+    }
+
+    if (question.includes('negative charge')) {
+        return correct
+            ? `CORRECT
+
+Nice job. Electrons carry a **negative** charge.`
+            : `INCORRECT
+
+The correct answer is **C**.
+
+Electrons are negatively charged, protons are positive, and neutrons are neutral.`
+    }
+
+    if (question.includes('producing ATP')) {
+        return correct
+            ? `CORRECT
+
+Nice job. Mitochondria are responsible for producing ATP in the cell.`
+            : `INCORRECT
+
+The correct answer is **B**.
+
+Mitochondria are known as the powerhouse of the cell because they produce ATP.`
+    }
+
+    if (question.includes('Declaration of Independence')) {
+        return correct
+            ? `CORRECT
+
+Nice job. The Declaration of Independence was signed in **1776**.`
+            : `INCORRECT
+
+The correct answer is **B**.
+
+The Declaration of Independence was signed in **1776**.`
+    }
+
+    return correct
+        ? `CORRECT
+
+Nice job. This was a simulated demo response.`
+        : `INCORRECT
+
+The correct answer is **${correctAnswer}**.
+
+This was a simulated demo response.`
+}
+
 function Quiz({ subject, demoMode = false }) {
     const [studyText, setStudyText] = useState('')
     const [topic, setTopic] = useState('')
@@ -178,15 +327,16 @@ function Quiz({ subject, demoMode = false }) {
 
         if (demoMode) {
             setTimeout(() => {
-                const demoQuestion = `Question: What is the derivative of $x^2$?
-
-A) $x$
-B) $2x$
-C) $x^2$
-D) $2$`
-
+                const demoQuestion = getDemoQuizQuestion(subject, topic)
                 setQuestion(demoQuestion)
-                startTimer()
+                if (
+                    demoQuestion.includes('A)') &&
+                    demoQuestion.includes('B)') &&
+                    demoQuestion.includes('C)') &&
+                    demoQuestion.includes('D)')
+                ) {
+                    startTimer()
+                }
                 setLoading(false)
             }, 700)
             return
@@ -234,18 +384,8 @@ D) $2$`
 
         if (demoMode) {
             setTimeout(() => {
-                const correct = finalAnswer === 'B'
-                const reply = correct
-                    ? `CORRECT
-
-Nice job. The derivative of $$x^2$$ is $$2x$$ by the power rule.`
-                    : `INCORRECT
-
-The correct answer is **B**.
-
-Using the power rule:
-
-$$\\frac{d}{dx}(x^2) = 2x$$`
+                const reply = getDemoFeedback(question, finalAnswer)
+                const correct = reply.startsWith('CORRECT')
 
                 if (correct) {
                     setScore((prev) => prev + 1)
@@ -344,7 +484,7 @@ $$\\frac{d}{dx}(x^2) = 2x$$`
 
             {demoMode && (
                 <p className="muted-text" style={{ marginBottom: '12px' }}>
-                    Demo Mode Active — quiz uses sample responses only
+                    Demo Mode Active — quiz uses simulated subject-aware questions and feedback
                 </p>
             )}
 
